@@ -1,0 +1,5 @@
+-[ ] Have retry option
+- [ ] make it get harder over time
+- fix UI
+- make score look better
+- Fix image sizing
