@@ -1,8 +1,11 @@
 import pygame
 import settings
+import game
 
 pygame.init()
 
 screen = settings.set_screen()
 clock = pygame.time.Clock()
-settings.load_images()
+player_img, obstacle_img = settings.load_images()
+
+
