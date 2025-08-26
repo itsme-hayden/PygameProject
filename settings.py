@@ -2,7 +2,7 @@ import pygame
 
 GAME_NAME = "REV'S ZOOMIES"
 GAME_ICON = pygame.image.load(r"revzoomieasset\Reveille_logo.png")
-FONT = pygame.font.SysFont(None, 36)
+PLAYER_ICON = pygame.image.load(r"revzoomieasset\rev_run1.png")
 WIDTH, HEIGHT = 800, 400
 GROUND_HEIGHT = HEIGHT - 50
 FPS = 60
@@ -31,6 +31,10 @@ def load_images():
     obstacle_img = pygame.transform.scale(obstacle_img, (40, 60))
 
     return (player_img, obstacle_img)
+
+def load_font():
+    pygame.font.init()
+    return pygame.font.SysFont(None, 36)
 
 def draw_ground(screen:pygame.display):
     pygame.draw.line(screen, BLACK, (0, GROUND_HEIGHT), (WIDTH, GROUND_HEIGHT), 2)

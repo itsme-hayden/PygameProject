@@ -1,18 +1,19 @@
 import pygame
 import random #AI imported random but never used it, i could utilize to spawn obsticals
 import sys
-import main
 import settings
 import player
 import obstacle
 
 
-
+#screen set up
+screen = settings.set_screen()
+clock = pygame.time.Clock()
 
 # Player setup
-user = player.Player(main.player_img, 
-                     settings.PLAYER_XPOS, 
-                     settings.GROUND_HEIGHT - main.player_img.get_height(),
+user = player.Player(settings.PLAYER_XPOS, 
+                     settings.GROUND_HEIGHT 
+                     - settings.PLAYER_ICON.get_height(),
                      settings.JUMP_STRENGTH)
 
 
@@ -21,91 +22,96 @@ gravity = settings.GRAVITY
 
 
 # Obstacles
-obstacle_list = []
-obstacle_timer = 0
-spawn_rate = 1500  # milliseconds
+ # milliseconds
 
 # Font
-font = settings.FONT
+font = settings.load_font()
 score = 0
 start_time = pygame.time.get_ticks() #TODO CHECK THIS
 
-def draw_player(x, y):
-    main.screen.blit(main.player_img, (x, y))
+def draw_player(player, x, y):
+    screen.blit(player.get_img(), (x, y))
 
 def draw_obstacles(obstacles):
     for obs in obstacles:
-        main.screen.blit(main.obstacle_img, (obs.x, obs.y))
+        screen.blit(obs.get_img(), (obs.get_x(), obs.get_y()))
 
 def check_collision(player_rect, obstacles):
     for obs in obstacles:
-        if player_rect.colliderect(obs):
+        if player_rect.colliderect(obs.get_hitbox()):
             return True
     return False
 
 def display_score(screen):
     score = (pygame.time.get_ticks() - start_time) // 100
-    score_text = font.render(f"Score: {score}", True, BLACK)
+    score_text = font.render(f"Score: {score}", True, settings.BLACK)
     screen.blit(score_text, (10, 10))
 
 def game_over(screen):
-    text = font.render("Game Over!", True, BLACK)
-    screen.blit(text, (WIDTH//2 - 80, HEIGHT//2))
-    pygame.display.flip()
+    text = font.render("Game Over!", True, settings.BLACK)
+    screen.blit(text, (screen.WIDTH//2 - 80, screen.HEIGHT//2))
     pygame.time.wait(2000)
 
 def game_loop():
     running = True
+    obstacle_list = []
+    obstacle_timer = 0
+    obstacle_speed = -1
+    spawn_rate = 1500 
     while running:
-        dt = main.clock.tick(settings.FPS) # can this be moved out of loop, as a constant?
-        main.screen.fill(settings.WHITE)
+        dt = clock.tick(settings.FPS)
+        screen.fill(settings.WHITE)
 
         # Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
                 sys.exit()
-            if event.key == pygame.K_SPACE and on_ground:
+            if event.type == pygame.K_SPACE and on_ground:
                 user.jump()
 
         # Player physics
         user.update_y(user.get_y_vel())
         user.update_y_vel(gravity)
 
-        if user.get_y() + player_img.get_height() >= ground_y: #this seems to keep rev on ground, i think class can do that
-            player_y = ground_y - player_img.get_height()
-            on_ground = True
+        
+        on_ground = user.is_on_ground(settings.GROUND_HEIGHT)
 
         # Spawn obstacles
         obstacle_timer += dt 
         if obstacle_timer >= spawn_rate:
             obstacle_timer = 0
-            new_obstacle = obstacle.Obstacle(main.obstacle_img, 
-                                             settings.WIDTH, 
+            new_obstacle = obstacle.Obstacle(settings.WIDTH, 
                                              settings.GROUND_HEIGHT)
             obstacle_list.append(new_obstacle)
 
         # Move obstacles
         for obs in obstacle_list:
-            obs.update_x(-6)
+            obs.update_x(obstacle_speed)
         obstacle_list = [obs for obs in obstacle_list if obs.get_x() + obs.get_width() > 0]
+        
+        if dt // 1000 % 3 == 0: #every 3 seconds
+            obstacle_speed -= 1
+
 
         # Draw ground
-        settings.draw_ground(main.screen)
+        settings.draw_ground(screen)
 
         # Draw player and obstacles
-        draw_player(user.get_x(), user.get_y())
+        draw_player(user, user.get_x(), user.get_y())
         draw_obstacles(obstacle_list)
 
         # Check collision
-        player_rect = pygame.Rect(user.get_x, user.get_y, user.get_width(), user.get_height())
-        if check_collision(player_rect, obstacle_list):
-            game_over(main.screen)
+        if check_collision(user.hitbox, obstacle_list):
+            game_over(screen)
             running = False
 
-        display_score(main.screen)
+        display_score(screen)
+
+        pygame.display.flip()
         
 
     pygame.display.flip()
+    
 
-pygame.quit()
+
